@@ -101,21 +101,17 @@ def _set_team_level(game_event):
 # =============================================================================
 def _set_deaths(player):
     """Set the player's deaths to their multi_kill."""
-    # Get the multi_kill type to use
-    value = multi_kill.get_int()
+    if not player.level:
+        return
 
-    # Should the death amount be changed?
+    value = multi_kill.get_int()
     if value not in (1, 2):
         return
 
     # Should the actual multi_kill value be used?
     if value == 1:
-
-        # Set the player's deaths to their multi_kill value
         player.deaths = player.multi_kill
 
     # Should the number of kills remaining be used?
     else:
-
-        # Set the player's deaths to the remaining kills
         player.deaths = player.level_multi_kill - player.multi_kill
