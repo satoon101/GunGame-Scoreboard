@@ -77,7 +77,7 @@ def _set_score(game_event):
 # =============================================================================
 # >> GUNGAME EVENTS
 # =============================================================================
-@Event('gg_level_up')
+@Event('gg_level_up', 'gg_level_down')
 def _set_score(game_event):
     """Set the player's score to their level."""
     if 'gg_teamplay' in gg_plugin_manager:
