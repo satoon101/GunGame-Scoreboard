@@ -71,7 +71,8 @@ def _set_score(game_event):
     if 'gg_teamplay' in gg_plugin_manager:
         return
     player = player_dictionary[game_event['userid']]
-    player.kills = player.level
+    if player.level is not None:
+        player.kills = player.level
 
 
 # =============================================================================
