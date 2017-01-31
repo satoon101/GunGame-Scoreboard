@@ -16,6 +16,7 @@ from players.teams import team_managers
 from gungame.core.players.attributes import AttributePostHook
 from gungame.core.players.dictionary import player_dictionary
 from gungame.core.plugins.manager import gg_plugin_manager
+from gungame.core.status import GunGameMatchStatus, GunGameStatus
 from gungame.core.teams import team_levels
 
 # Plugin
@@ -28,6 +29,9 @@ from .configuration import multi_kill
 @EntityPostHook(EntityCondition.is_player, 'increment_frag_count')
 def _hook_frag_set(stack_data, return_value):
     """Set the player's score to their level."""
+    if GunGameStatus.MATCH is not GunGameMatchStatus.ACTIVE:
+        return
+
     if 'gg_teamplay' in gg_plugin_manager:
         return
     player = player_dictionary[userid_from_pointer(stack_data[0])]
@@ -37,6 +41,9 @@ def _hook_frag_set(stack_data, return_value):
 @EntityPostHook(EntityCondition.is_player, 'increment_death_count')
 def _hook_death_set(stack_data, return_value):
     """Set the player's deaths to their multi_kill."""
+    if GunGameStatus.MATCH is not GunGameMatchStatus.ACTIVE:
+        return
+
     if 'gg_teamplay' not in gg_plugin_manager:
         _set_deaths(player_dictionary[userid_from_pointer(stack_data[0])])
 
@@ -56,6 +63,9 @@ def _hook_multi_kill(player, *args):
 # =============================================================================
 @Event('round_start', 'round_end')
 def _round_start(game_event):
+    if GunGameStatus.MATCH is not GunGameMatchStatus.ACTIVE:
+        return
+
     if not gg_plugin_manager.is_team_game:
         return
     for class_name in team_managers:
@@ -68,6 +78,9 @@ def _round_start(game_event):
 @Event('player_spawn')
 def _set_score(game_event):
     """Set the player's score to their level."""
+    if GunGameStatus.MATCH is not GunGameMatchStatus.ACTIVE:
+        return
+
     if 'gg_teamplay' in gg_plugin_manager:
         return
     player = player_dictionary[game_event['userid']]
