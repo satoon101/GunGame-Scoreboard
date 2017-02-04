@@ -6,7 +6,8 @@
 # >> IMPORTS
 # =============================================================================
 # Source.Python
-from entities.hooks import EntityCondition, EntityPostHook
+from core import GAME_NAME
+from entities.hooks import EntityCondition, EntityPostHook, EntityPreHook
 from events import Event
 from filters.entities import EntityIter
 from players.helpers import userid_from_pointer
@@ -24,28 +25,74 @@ from .configuration import multi_kill
 
 
 # =============================================================================
+# >> GLOBAL VARIABLES
+# =============================================================================
+_increment_dict = {}
+_in_increment = False
+
+
+# =============================================================================
 # >> ENTITY HOOKS
 # =============================================================================
-@EntityPostHook(EntityCondition.is_player, 'increment_frag_count')
-def _hook_frag_set(stack_data, return_value):
-    """Set the player's score to their level."""
+@EntityPreHook(EntityCondition.is_player, 'increment_frag_count')
+def _pre_hook_frag(stack_data):
+    global _in_increment
+    if _in_increment:
+        _in_increment = False
+        return
+
     if GunGameStatus.MATCH is not GunGameMatchStatus.ACTIVE:
         return
 
     if 'gg_teamplay' in gg_plugin_manager:
         return
-    player = player_dictionary[userid_from_pointer(stack_data[0])]
+
+    address = stack_data.registers.esp.address.address
+    _increment_dict[address] = userid_from_pointer(stack_data[0])
+
+    if GAME_NAME == 'csgo':
+        _in_increment = True
+
+
+@EntityPostHook(EntityCondition.is_player, 'increment_frag_count')
+def _post_hook_frag(stack_data, return_value):
+    """Set the player's score to their level."""
+    address = stack_data.registers.esp.address.address
+    userid = _increment_dict.pop(address, None)
+    if userid is None:
+        return
+
+    player = player_dictionary[userid]
     player.kills = player.level
 
 
-@EntityPostHook(EntityCondition.is_player, 'increment_death_count')
-def _hook_death_set(stack_data, return_value):
-    """Set the player's deaths to their multi_kill."""
+@EntityPreHook(EntityCondition.is_player, 'increment_death_count')
+def _pre_hook_death(stack_data):
+    global _in_increment
+    if _in_increment:
+        _in_increment = False
+        return
+
     if GunGameStatus.MATCH is not GunGameMatchStatus.ACTIVE:
         return
 
-    if 'gg_teamplay' not in gg_plugin_manager:
-        _set_deaths(player_dictionary[userid_from_pointer(stack_data[0])])
+    if 'gg_teamplay' in gg_plugin_manager:
+        return
+
+    address = stack_data.registers.esp.address.address
+    _increment_dict[address] = userid_from_pointer(stack_data[0])
+
+    if GAME_NAME == 'csgo':
+        _in_increment = True
+
+
+@EntityPostHook(EntityCondition.is_player, 'increment_death_count')
+def _post_hook_death(stack_data, return_value):
+    """Set the player's deaths to their multi_kill."""
+    address = stack_data.registers.esp.address.address
+    userid = _increment_dict.pop(address, None)
+    if userid is not None:
+        _set_deaths(player_dictionary[userid])
 
 
 # =============================================================================
