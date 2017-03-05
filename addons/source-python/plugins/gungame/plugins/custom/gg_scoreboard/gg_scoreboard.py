@@ -6,8 +6,7 @@
 # >> IMPORTS
 # =============================================================================
 # Source.Python
-from core import GAME_NAME
-from entities.hooks import EntityCondition, EntityPostHook, EntityPreHook
+from entities.hooks import EntityCondition, EntityPreHook
 from events import Event
 from filters.entities import EntityIter
 from players.helpers import userid_from_pointer
@@ -25,74 +24,29 @@ from .configuration import multi_kill
 
 
 # =============================================================================
-# >> GLOBAL VARIABLES
-# =============================================================================
-_increment_dict = {}
-_in_increment = False
-
-
-# =============================================================================
 # >> ENTITY HOOKS
 # =============================================================================
 @EntityPreHook(EntityCondition.is_player, 'increment_frag_count')
 def _pre_hook_frag(stack_data):
-    global _in_increment
-    if _in_increment:
-        _in_increment = False
-        return
-
     if GunGameStatus.MATCH is not GunGameMatchStatus.ACTIVE:
         return
 
     if 'gg_teamplay' in gg_plugin_manager:
         return
-
-    address = stack_data.registers.esp.address.address
-    _increment_dict[address] = userid_from_pointer(stack_data[0])
-
-    if GAME_NAME == 'csgo':
-        _in_increment = True
-
-
-@EntityPostHook(EntityCondition.is_player, 'increment_frag_count')
-def _post_hook_frag(stack_data, return_value):
-    """Set the player's score to their level."""
-    address = stack_data.registers.esp.address.address
-    userid = _increment_dict.pop(address, None)
-    if userid is None:
-        return
-
-    player = player_dictionary[userid]
-    player.kills = player.level
+    player = player_dictionary[userid_from_pointer(stack_data[0])]
+    stack_data[1] = player.level - player.kills
 
 
 @EntityPreHook(EntityCondition.is_player, 'increment_death_count')
 def _pre_hook_death(stack_data):
-    global _in_increment
-    if _in_increment:
-        _in_increment = False
-        return
-
     if GunGameStatus.MATCH is not GunGameMatchStatus.ACTIVE:
         return
 
     if 'gg_teamplay' in gg_plugin_manager:
         return
-
-    address = stack_data.registers.esp.address.address
-    _increment_dict[address] = userid_from_pointer(stack_data[0])
-
-    if GAME_NAME == 'csgo':
-        _in_increment = True
-
-
-@EntityPostHook(EntityCondition.is_player, 'increment_death_count')
-def _post_hook_death(stack_data, return_value):
-    """Set the player's deaths to their multi_kill."""
-    address = stack_data.registers.esp.address.address
-    userid = _increment_dict.pop(address, None)
-    if userid is not None:
-        _set_deaths(player_dictionary[userid])
+    player = player_dictionary[userid_from_pointer(stack_data[0])]
+    value = _get_deaths(player)
+    stack_data[1] = value - player.deaths
 
 
 # =============================================================================
@@ -102,7 +56,9 @@ def _post_hook_death(stack_data, return_value):
 def _hook_multi_kill(player, *args):
     """Set the player's deaths to their multi_kill."""
     if 'gg_teamplay' not in gg_plugin_manager:
-        _set_deaths(player)
+        value = _get_deaths(player)
+        if value is not None:
+            player.deaths = value
 
 
 # =============================================================================
@@ -131,8 +87,12 @@ def _set_score(game_event):
     if 'gg_teamplay' in gg_plugin_manager:
         return
     player = player_dictionary[game_event['userid']]
-    if player.level is not None:
-        player.kills = player.level
+    if player.level is None:
+        return
+    player.kills = player.level
+    value = _get_deaths(player)
+    if value is not None:
+        player.deaths = value
 
 
 # =============================================================================
@@ -160,19 +120,19 @@ def _set_team_level(game_event):
 # =============================================================================
 # >> HELPER FUNCTIONS
 # =============================================================================
-def _set_deaths(player):
+def _get_deaths(player):
     """Set the player's deaths to their multi_kill."""
     if not player.level:
         return
 
     value = multi_kill.get_int()
     if value not in (1, 2):
-        return
+        return None
 
     # Should the actual multi_kill value be used?
     if value == 1:
-        player.deaths = player.multi_kill
+        return player.multi_kill
 
     # Should the number of kills remaining be used?
     else:
-        player.deaths = player.level_multi_kill - player.multi_kill
+        return player.level_multi_kill - player.multi_kill
