@@ -7,7 +7,7 @@ ignore=
 # Definitions of codes disabled
 # For a list of error codes, see:
 #   http://pylint-messages.wikidot.com/all-codes
-disable=
+disable=C0330,E0401,E0611
 
 
 [BASIC]
@@ -54,3 +54,7 @@ msg-template={msg_id}:{line:3d},{column:2d}: {msg} ({symbol})
 ignore-imports=yes
 ignore-comments=yes
 ignore-docstrings=yes
+
+
+[VARIABLES]
+dummy-variables-rgx=
