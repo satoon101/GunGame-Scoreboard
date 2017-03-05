@@ -79,7 +79,7 @@ def _round_start(game_event):
 
 
 @Event('player_spawn')
-def _set_score(game_event):
+def _set_score_on_spawn(game_event):
     """Set the player's score to their level."""
     if GunGameStatus.MATCH is not GunGameMatchStatus.ACTIVE:
         return
@@ -99,7 +99,7 @@ def _set_score(game_event):
 # >> GUNGAME EVENTS
 # =============================================================================
 @Event('gg_level_up', 'gg_level_down')
-def _set_score(game_event):
+def _set_score_on_level(game_event):
     """Set the player's score to their level."""
     if 'gg_teamplay' in gg_plugin_manager:
         return
