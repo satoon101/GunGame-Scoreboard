@@ -46,7 +46,8 @@ def _pre_hook_death(stack_data):
         return
     player = player_dictionary[userid_from_pointer(stack_data[0])]
     value = _get_deaths(player)
-    stack_data[1] = value - player.deaths
+    if value is not None:
+        stack_data[1] = value - player.deaths
 
 
 # =============================================================================
