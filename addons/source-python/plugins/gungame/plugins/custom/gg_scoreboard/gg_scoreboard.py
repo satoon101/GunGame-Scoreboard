@@ -74,9 +74,9 @@ def _round_start(game_event):
         return
     for class_name in team_managers:
         for entity in EntityIter(class_name):
-            if entity.team not in team_levels:
+            if entity.team_index not in team_levels:
                 continue
-            entity.score = team_levels[entity.team]
+            entity.score = team_levels[entity.team_index]
 
 
 @Event('player_spawn')
@@ -112,7 +112,7 @@ def _set_score_on_level(game_event):
 def _set_team_level(game_event):
     for class_name in team_managers:
         for entity in EntityIter(class_name):
-            if entity.team != game_event['team']:
+            if entity.team_index != game_event['team']:
                 continue
             entity.score = game_event['new_level']
             return
