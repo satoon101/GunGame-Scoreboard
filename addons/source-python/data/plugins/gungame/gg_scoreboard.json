@@ -1,0 +1,12 @@
+{
+    "cstrike": {
+        "linux": {
+            "IncrementFragCount": "_ZN11CBasePlayer18IncrementFragCountEi",
+            "IncrementDeathCount": "_ZN11CBasePlayer19IncrementDeathCountEi"
+        },
+        "windows": {
+            "IncrementFragCount": " 55 8B EC 8B 45 08 01 81 38 0E 00 00",
+            "IncrementDeathCount": " 55 8B EC 8B 45 08 01 81 3C 0E 00 00"
+        }
+    }
+}

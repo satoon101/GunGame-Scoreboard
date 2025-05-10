@@ -11,19 +11,19 @@ from gungame.core.config.manager import GunGameConfigManager
 # Plugin
 from .info import info
 
-
 # =============================================================================
 # >> ALL DECLARATION
 # =============================================================================
 __all__ = (
-    'multi_kill',
+    "multi_kill",
 )
 
 
 # =============================================================================
 # >> CONFIGURATION
 # =============================================================================
-with GunGameConfigManager(info.name) as config:
-
-    with config.cvar('multi_kill') as multi_kill:
-        multi_kill.add_text()
+with (
+    GunGameConfigManager(info.name) as _config,
+    _config.cvar(name="multi_kill") as multi_kill,
+):
+    multi_kill.add_text()
