@@ -166,7 +166,7 @@ def _get_deaths(player):
     if not player.level:
         return None
 
-    value = multi_kill.get_int()
+    value = int(multi_kill)
     if value not in (1, 2):
         return None
 
